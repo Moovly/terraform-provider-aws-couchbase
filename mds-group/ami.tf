@@ -1,6 +1,6 @@
 data "aws_ami" "default" {
   most_recent = true
-
+  owners = ["amazon"]
   filter {
     name = "name"
     values = ["amzn-ami-*-x86_64-gp2"]
@@ -9,11 +9,6 @@ data "aws_ami" "default" {
   filter {
     name = "virtualization-type"
     values = ["hvm"]
-  }
-
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
   }
 }
 
