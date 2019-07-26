@@ -28,29 +28,30 @@ data "aws_iam_policy_document" "couchbase" {
     sid = "1"
 
     actions = [
-        "ec2:CreateTags",
-        "ec2:DescribeTags",
-        "ec2:DescribeInstances",
-        "autoscaling:DescribeAutoScalingGroups"
+      "ec2:CreateTags",
+      "ec2:DescribeTags",
+      "ec2:DescribeInstances",
+      "autoscaling:DescribeAutoScalingGroups",
     ]
 
     resources = [
-        "*"
+      "*",
     ]
   }
 }
 
 resource "aws_iam_role_policy" "couchbase" {
-    count = "${local.iam_count}"
+  count = local.iam_count
 
-    name   = "rally_access"
-    role   = "${aws_iam_role.couchbase[count.index].id}"
-    policy = "${data.aws_iam_policy_document.couchbase.json}"
+  name = "rally_access"
+  role = aws_iam_role.couchbase[count.index].id
+  policy = data.aws_iam_policy_document.couchbase.json
 }
 
 resource "aws_iam_instance_profile" "couchbase" {
-    count = "${local.iam_count}"
+  count = local.iam_count
 
-    name_prefix = "couchbase"
-    role        = "${aws_iam_role.couchbase[count.index].name}"
+  name_prefix = "couchbase"
+  role = aws_iam_role.couchbase[count.index].name
 }
+
