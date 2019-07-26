@@ -1,12 +1,12 @@
 locals {
-    iam_count = "${length(var.iam_instance_profile) > 0 ? 0 : 1}"
+  iam_count = length(var.iam_instance_profile) > 0 ? 0 : 1
 }
 
 resource "aws_iam_role" "couchbase" {
-    count = "${local.iam_count}"
-    name_prefix = "CouchbaseNode"
+  count       = local.iam_count
+  name_prefix = "CouchbaseNode"
 
-    assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -21,6 +21,7 @@ resource "aws_iam_role" "couchbase" {
   ]
 }
 EOF
+
 }
 
 data "aws_iam_policy_document" "couchbase" {
