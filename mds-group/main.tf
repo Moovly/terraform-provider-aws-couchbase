@@ -19,17 +19,26 @@ resource "aws_launch_configuration" "node" {
   enable_monitoring = "${var.detailed_monitoring}"
 
   key_name                    = "${var.key_pair_name}"
-  security_groups             = ["${var.security_group_ids}"]
+  security_groups             = "${var.security_group_ids}"
   iam_instance_profile        = "${var.iam_instance_profile}"
   associate_public_ip_address = "${var.topology == "public"}"
 
-  root_block_device = ["${var.boot_volume}"]
-  ebs_block_device  = ["${merge(var.data_volume, map("device_name", "/dev/sdb"))}"]
+  root_block_device {
+    volume_type = "${var.boot_volume.volume_type}"
+    volume_size = "${var.boot_volume.volume_size}"
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    volume_type = "${var.data_volume.volume_type}"
+    volume_size = "${var.data_volume.volume_size}"
+  }
+
   ebs_optimized     = "${var.ebs_optimized}"
 
   placement_tenancy = "${var.placement_tenancy}"
 
-  user_data = "${data.template_file.user_data.rendered}"
+  user_data = "${data.template_file.user_data.*.rendered[count.index]}"
 
   lifecycle {
     create_before_destroy = true
@@ -40,11 +49,11 @@ resource "aws_autoscaling_group" "node" {
   count = "${var.node_count > 0 ? 1 : 0}"
 
   name_prefix          = "${replace("${var.cluster_name} ${var.name}", " ", "-")}"
-  launch_configuration = "${aws_launch_configuration.node.name}"
+  launch_configuration = "${aws_launch_configuration.node.*.name[count.index]}"
   desired_capacity     = "${var.node_count}"
   min_size             = 1
   max_size             = 100
-  vpc_zone_identifier  = ["${var.subnet_ids}"]
+  vpc_zone_identifier  = "${var.subnet_ids}"
 
   # Prevent AZ imbalance from resulting in an unexpected termination
   # It needs to be a manual process with rebalances in Couchbase
