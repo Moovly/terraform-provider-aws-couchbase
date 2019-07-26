@@ -44,7 +44,7 @@ resource "aws_iam_role_policy" "couchbase" {
     count = "${local.iam_count}"
 
     name   = "rally_access"
-    role   = "${aws_iam_role.couchbase.id}"
+    role   = "${aws_iam_role.couchbase[count.index].id}"
     policy = "${data.aws_iam_policy_document.couchbase.json}"
 }
 
@@ -52,5 +52,5 @@ resource "aws_iam_instance_profile" "couchbase" {
     count = "${local.iam_count}"
 
     name_prefix = "couchbase"
-    role        = "${aws_iam_role.couchbase.name}"
+    role        = "${aws_iam_role.couchbase[count.index].name}"
 }
