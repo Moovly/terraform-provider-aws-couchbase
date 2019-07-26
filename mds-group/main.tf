@@ -70,7 +70,7 @@ data "template_file" "user_data" {
 
   template = "${file("${path.module}/userdata.tpl.sh")}"
 
-  vars {
+  vars = {
     region            = "${data.aws_region.current.name}"
     apply_updates     = "${var.apply_updates ? "echo \"Applying updates...\"\nyum update -y": "echo \"Skipping updates\""}"
     installer_url     = "${local.installer_url}"
