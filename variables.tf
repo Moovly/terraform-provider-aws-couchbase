@@ -71,7 +71,6 @@ variable "apply_updates" {
 }
 
 variable "subnet_ids" {
-  type        = list
   description = "List of subnets the nodes will be created within"
 }
 
