@@ -63,13 +63,26 @@ resource "aws_autoscaling_group" "node" {
   # This allows the use of https://github.com/brantburnett/terraform-aws-autoscaling-route53-srv
   wait_for_capacity_timeout = 0
 
-  tags = ["${concat(
-    list(
-      map("key", "Name", "value", "${var.cluster_name} ${var.name}", "propagate_at_launch", "true"),
-      map("key", "Services", "value", join(",", var.services), "propagate_at_launch", "true")
-    ),
-    var.tags)
-  }"]
+  tag {
+    key = "Name"
+    value = "${var.cluster_name} ${var.name}"
+    propagate_at_launch = true
+  }
+
+  tag {
+    key = "Services"
+    value = join(",", var.services)
+    propagate_at_launch = true
+  }
+
+  dynamic "tag" {
+    for_each = var.tags
+    content {
+      key = tag.value.key
+      value = tag.value.value
+      propagate_at_launch = tag.value.propagate_at_launch
+    }
+  }
 }
 
 data "aws_region" "current" {}

@@ -8,6 +8,7 @@ variable "node_count" {
 }
 
 variable "tags" {
+  type        = "list"
 	description = "Tags for the autoscaling group and EC2 instances.  This is a list of maps with `key`, `value`, and `propogate_at_launch` entries."
 	default = []
 }
@@ -104,12 +105,12 @@ variable "subnet_ids" {
 	description = "List of subnets the nodes will be created within"
 }
 
-variable "security_group_ids" {  
+variable "security_group_ids" {
 	type = "list"
 	description = "List of security groups to assign"
 }
 
-variable "topology" {  
+variable "topology" {
 	description = "Indicates if the cluster is using public or private hostnames.  Must be either 'public' or 'private'."
 	default = "private"
 }
