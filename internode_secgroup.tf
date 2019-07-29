@@ -1,5 +1,5 @@
 data "aws_subnet" "first" {
-  id = element(flatten(var.subnet_ids), 0)
+  id = element(var.subnet_ids, 0)
 }
 
 resource "aws_security_group" "internode" {

@@ -19,7 +19,7 @@ resource "aws_launch_configuration" "node" {
   enable_monitoring = "${var.detailed_monitoring}"
 
   key_name                    = "${var.key_pair_name}"
-  security_groups             = "${var.security_group_ids}"
+  security_groups             = var.security_group_ids
   iam_instance_profile        = "${var.iam_instance_profile}"
   associate_public_ip_address = "${var.topology == "public"}"
 
@@ -53,7 +53,7 @@ resource "aws_autoscaling_group" "node" {
   desired_capacity     = "${var.node_count}"
   min_size             = 1
   max_size             = 100
-  vpc_zone_identifier  = flatten(["${var.subnet_ids}"])
+  vpc_zone_identifier  = var.subnet_ids
 
   # Prevent AZ imbalance from resulting in an unexpected termination
   # It needs to be a manual process with rebalances in Couchbase
