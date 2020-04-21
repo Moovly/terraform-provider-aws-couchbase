@@ -27,7 +27,7 @@ variable "cluster_ram_size" {
 }
 
 variable "analytics_mpp" {
-  type        = "list"
+  type        = list
   description = "List of names for each analytics data folder for MPP.  Should normally match the number of cores."
 
   default = [
@@ -71,12 +71,12 @@ variable "apply_updates" {
 }
 
 variable "subnet_ids" {
-  type = "list"
+  type = list
   description = "List of subnets the nodes will be created within"
 }
 
 variable "security_group_ids" {
-  type = "list"
+  type = list
   description = "List of additional security groups to assign.  This is in addition to the automatically created security groups."
   default     = []
 }

@@ -13,5 +13,5 @@ data "aws_ami" "default" {
 }
 
 locals {
-    ami = "${var.ami == "" ? data.aws_ami.default.id : var.ami}"
+    ami = var.ami == "" ? data.aws_ami.default.id : var.ami
 }

@@ -4,18 +4,18 @@ module "cluster" {
 
   # Switch to this line for local dev
   source = "../"
-  
+
   couchbase_edition      = "enterprise"
   couchbase_version      = "5.0.1"
   cluster_name           = "Couchbase Example"
   cluster_admin_password = "password"
-  topology               = "${var.topology}"
+  topology               = var.topology
 
   # Number of nodes for each MDS group (up to 5 groups)
   node_count = {
-    "1" = 1
-    "2" = 1
-    "3" = 1 
+    1 = 1
+    2 = 1
+    3 = 1
   }
 
   # Services for each MDS group
@@ -23,48 +23,48 @@ module "cluster" {
   # However, the first MDS group should at least include the data service
   # Note: If you use Community Edition, you must use a single MDS group with all services.
   services = {
-    "1" = ["data"]
-    "2" = ["index"]
-    "3" = ["query"]
+    1 = ["data"]
+    2 = ["index"]
+    3 = ["query"]
   }
 
   # Name for each MDS group
   group_name = {
-    "1" = "Data"
-    "2" = "Index"
-    "3" = "Query"
+    1 = "Data"
+    2 = "Index"
+    3 = "Query"
   }
 
   # MDS setting maps will use the value from MDS group "1" if no value is specified for a specific MDS group
   instance_type = {
-    "1" = "t2.large"
+    1 = "t2.large"
   }
 
   ebs_optimized = {
-    "1" = false
+    1 = false
   }
 
   data_volume = {
-    "1" = {
+    1 = {
 			volume_type = "gp2" # SSD
 			volume_size = "100" # Size is in GB
 		}
   }
 
   tags = {
-    "1" = [
+    1 = [
       {
         key                 = "BillingEnvironment"
-        value               = "dev"               
-        propagate_at_launch = true  
+        value               = "dev"
+        propagate_at_launch = true
       }
     ]
   }
 
-  key_pair_name        = "${var.key_pair_name}"
-  iam_instance_profile = "${var.iam_instance_profile}"
+  key_pair_name        = var.key_pair_name
+  iam_instance_profile = var.iam_instance_profile
 
-  subnet_ids = "${data.aws_subnet_ids.default.ids}"
+  subnet_ids = data.aws_subnet_ids.default.ids
   client_cidr_blocks = [
     # Unlimited access, not recommended for real use
     "0.0.0.0/0"

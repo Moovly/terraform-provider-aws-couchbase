@@ -8,7 +8,7 @@ variable "node_count" {
 }
 
 variable "tags" {
-  type        = "list"
+  type        = list
 	description = "Tags for the autoscaling group and EC2 instances.  This is a list of maps with `key`, `value`, and `propogate_at_launch` entries."
 	default = []
 }
@@ -47,7 +47,7 @@ variable "cluster_ram_size" {
 }
 
 variable "analytics_mpp" {
-    type        = "list"
+    type        = list
     description = "List of names for each analytics data folder for MPP.  Should normally match the number of cores."
 
     default = [
@@ -62,7 +62,7 @@ variable "installer_url" {
 }
 
 variable "couchbase_version" {
-	type = "string"
+	type = string
 	description = "If installer_url is blank, use this version of Couchbase"
 }
 
@@ -101,12 +101,12 @@ variable "apply_updates" {
 }
 
 variable "subnet_ids" {
-	type = "list"
+	type = list
 	description = "List of subnets the nodes will be created within"
 }
 
 variable "security_group_ids" {
-	type = "list"
+	type = list
 	description = "List of security groups to assign"
 }
 
