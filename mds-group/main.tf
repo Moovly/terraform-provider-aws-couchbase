@@ -3,7 +3,7 @@ terraform {
 }
 
 locals {
-  built_installer_url = "http://packages.couchbase.com/releases/${var.couchbase_version}/couchbase-server-${var.couchbase_edition}-${var.couchbase_version}-centos6.x86_64.rpm"
+  built_installer_url = "http://packages.couchbase.com/releases/${var.couchbase_version}/couchbase-server-${var.couchbase_edition}-${var.couchbase_version}-amzn2.x86_64.rpm"
   installer_url       = coalesce(var.installer_url, local.built_installer_url)
 
   major_version = element(split(".", var.couchbase_version), 0)
