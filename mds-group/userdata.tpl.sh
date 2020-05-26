@@ -26,7 +26,7 @@ tee /etc/init.d/disable-thp << EOL
 # Description:       disables Transparent Huge Pages (THP) on boot
 ### END INIT INFO
 
-case $$$$1 in
+case $$$1 in
 start)
   if [ -d /sys/kernel/mm/transparent_hugepage ]; then
     echo 'never' > /sys/kernel/mm/transparent_hugepage/enabled
@@ -65,14 +65,14 @@ echo "Formatting data drive..."
 DEVICE=/dev/xvdb
 DATADIR=/mnt/data
 
-mkfs -t ext4 $$DEVICE
+mkfs -t ext4 $DEVICE
 
-mkdir $$DATADIR
-echo -e "$$DEVICE\t$$DATADIR\text4\tdefaults,nofail\t0\t2" >> /etc/fstab
+mkdir $DATADIR
+echo -e "$DEVICE\t$$DATADIR\text4\tdefaults,nofail\t0\t2" >> /etc/fstab
 mount -a
 
-chown couchbase $$DATADIR
-chgrp couchbase $$DATADIR
+chown couchbase $DATADIR
+chgrp couchbase $DATADIR
 
 
 ### Node init
@@ -80,28 +80,28 @@ chgrp couchbase $$DATADIR
 sleep 15 # Give Couchbase some time to startup
 
 instanceID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
-echo "Instance ID: $$instanceID"
+echo "Instance ID: $instanceID"
 
 if [ "${topology}" == "private" ]; then
   nodeDNS=`curl -s http://169.254.169.254/latest/meta-data/local-hostname`
 else
   nodeDNS=`curl -s http://169.254.169.254/latest/meta-data/public-hostname`
 fi
-echo "Node hostname: $$nodeDNS"
+echo "Node hostname: $nodeDNS"
 
-tempPassword=$$instanceID
+tempPassword=$instanceID
 
 while true
 do
   echo "Initializing node..."
   /opt/couchbase/bin/couchbase-cli node-init \
-    --cluster $$nodeDNS \
-    --node-init-data-path $$DATADIR/data \
-    --node-init-index-path $$DATADIR/index \
+    --cluster $nodeDNS \
+    --node-init-data-path $DATADIR/data \
+    --node-init-index-path $DATADIR/index \
     ${analytics_paths} \
-    --node-init-hostname $$nodeDNS \
+    --node-init-hostname $nodeDNS \
     --username Administrator \
-    --password $$tempPassword \
+    --password $tempPassword \
     && break
 
   echo "Sleeping 10 seconds before retry..."
@@ -112,35 +112,35 @@ done
 ### Bootstrap
 
 rallyAutoscalingGroup="${rally_autoscaling_group_id}"
-if [[ -z $$rallyAutoscalingGroup ]]; then
+if [[ -z $rallyAutoscalingGroup ]]; then
   # We're in the rally autoscaling group, so get it from our tags
 
   echo "Getting autoscaling group name from tags..."
   rallyAutoscalingGroup=$(aws ec2 describe-instances \
     --region ${region} \
-    --instance-ids $$instanceID \
+    --instance-ids $instanceID \
     | jq '.Reservations[0].Instances[0].Tags[] | select( .Key == "aws:autoscaling:groupName") | .Value' \
     | sed 's/"//g')
 
-  if [[ -z $$rallyAutoscalingGroup ]]; then
+  if [[ -z $rallyAutoscalingGroup ]]; then
     echo "No rally autoscaling group found." 1>&2
     exit 1
   fi
 fi
 
-echo "Getting instances from the rally autoscaling group ($$rallyAutoscalingGroup)..."
+echo "Getting instances from the rally autoscaling group ($rallyAutoscalingGroup)..."
 rallyAutoscalingGroupInstanceIDs=$(aws autoscaling describe-auto-scaling-groups \
   --region ${region} \
   --query 'AutoScalingGroups[*].Instances[*].InstanceId' \
-  --auto-scaling-group-name $$rallyAutoscalingGroup \
+  --auto-scaling-group-name $rallyAutoscalingGroup \
   | grep "i-" | sed 's/[ ",]//g' | sort)
 
-rallyInstanceID=`echo $$rallyAutoscalingGroupInstanceIDs | cut -d " " -f1`
+rallyInstanceID=`echo $rallyAutoscalingGroupInstanceIDs | cut -d " " -f1`
 
 # Check if any IDs are already the rally point and overwrite rallyInstanceID if so
-rallyAutoscalingGroupInstanceIDsArray=(`echo $$rallyAutoscalingGroupInstanceIDs`)
-for i in $${rallyAutoscalingGroupInstanceIDsArray[@]}; do
-  tags=`aws ec2 describe-tags --region ${region} --filter "Name=tag:Rally,Values=1" "Name=resource-id,Values=$$i"`
+rallyAutoscalingGroupInstanceIDsArray=(`echo $rallyAutoscalingGroupInstanceIDs`)
+for i in ${rallyAutoscalingGroupInstanceIDsArray[@]}; do
+  tags=`aws ec2 describe-tags --region ${region} --filter "Name=tag:Rally,Values=1" "Name=resource-id,Values=$i"`
   tags=`echo $tags | jq '.Tags'`
   if [ "$tags" != "[]" ]
   then
@@ -148,40 +148,40 @@ for i in $${rallyAutoscalingGroupInstanceIDsArray[@]}; do
   fi
 done
 
-echo "Rally Instance ID: $$rallyInstanceID"
+echo "Rally Instance ID: $rallyInstanceID"
 
 if [ "${topology}" == "private" ]; then
   rallyDNS=$(aws ec2 describe-instances \
     --region ${region} \
     --query 'Reservations[0].Instances[0].PrivateDnsName' \
-    --instance-ids $$rallyInstanceID \
+    --instance-ids $rallyInstanceID \
     --output text)
 else
   rallyDNS=$(aws ec2 describe-instances \
     --region ${region} \
     --query 'Reservations[0].Instances[0].NetworkInterfaces[0].Association.PublicDnsName' \
-    --instance-ids $$rallyInstanceID \
+    --instance-ids $rallyInstanceID \
     --output text)
 fi
 
-echo "Rally DNS: $$rallyDNS"
+echo "Rally DNS: $rallyDNS"
 
-if [ "$$rallyDNS" == "$$nodeDNS" ]; then
+if [ "$rallyDNS" == "$$nodeDNS" ]; then
   echo "This is the rally server, setting tags..."
 
   aws ec2 create-tags \
     --region ${region} \
-    --resources $$instanceID \
+    --resources $instanceID \
     --tags Key=Rally,Value=1
 
   # use env vars because -u and -p are deprecated in 5.0, this makes us compatible with older versions too
   CB_REST_USERNAME=Administrator
-  CB_REST_PASSWORD=$$tempPassword
+  CB_REST_PASSWORD=$tempPassword
 
   echo "Initializing cluster..."
 
   /opt/couchbase/bin/couchbase-cli cluster-init \
-    --cluster $$rallyDNS \
+    --cluster $rallyDNS \
     --cluster-username=${cluster_admin_username} --cluster-password=${cluster_admin_password} \
     --cluster-ramsize=${data_ramsize} --cluster-index-ramsize=${index_ramsize} --cluster-fts-ramsize=${fts_ramsize} \
     ${analytics_ramsize > 0 ? "--cluster-analytics-ramsize=${analytics_ramsize}" : ""} \
@@ -190,17 +190,17 @@ if [ "$$rallyDNS" == "$$nodeDNS" ]; then
   if [ "${couchbase_edition}" == "enterprise" ]; then
     availabilityZone=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
 
-    echo "Setting initial server group name to $$availabilityZone..."
+    echo "Setting initial server group name to $availabilityZone..."
     curl -s -X PUT -u ${cluster_admin_username}:${cluster_admin_password} \
-      http://$$rallyDNS:8091/pools/default/serverGroups/0 \
-      -d name="$$availabilityZone"
+      http://$rallyDNS:8091/pools/default/serverGroups/0 \
+      -d name="$availabilityZone"
   fi
 else
-  echo "Using rally server $$rallyDNS, setting tags..."
+  echo "Using rally server $rallyDNS, setting tags..."
 
   aws ec2 create-tags \
     --region ${region} \
-    --resources $$instanceID \
+    --resources $instanceID \
     --tags Key=Rally,Value=0
 
   # Manage Server Groups For Rack Zone Awareness, if Enterprise Edition
@@ -211,43 +211,43 @@ else
       echo "Checking server groups..."
 
       availabilityZone=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
-      matchingGroupCount=`curl -s -u ${cluster_admin_username}:${cluster_admin_password} http://$$rallyDNS:8091/pools/default/serverGroups \
+      matchingGroupCount=`curl -s -u ${cluster_admin_username}:${cluster_admin_password} http://$rallyDNS:8091/pools/default/serverGroups \
         | jq -r '.groups[].name' \
-        | sed -n "/$$availabilityZone/p" \
+        | sed -n "/$availabilityZone/p" \
         | wc -l`
 
-      if [ "$$matchingGroupCount" == "0" ]; then
-        echo "Creating Server Group $$availabilityZone..."
+      if [ "$matchingGroupCount" == "0" ]; then
+        echo "Creating Server Group $availabilityZone..."
 
         curl -s -X POST -u ${cluster_admin_username}:${cluster_admin_password} \
-          http://$$rallyDNS:8091/pools/default/serverGroups \
-          -d name="$$availabilityZone" \
+          http://$rallyDNS:8091/pools/default/serverGroups \
+          -d name="$availabilityZone" \
           && break
 
         echo "Sleeping 10 seconds before retry..."
         sleep 10
       else
-        echo "Server Group $$availabilityZone exists."
+        echo "Server Group $availabilityZone exists."
         break
       fi
     done
 
-    addGroupName="--group-name=$$availabilityZone"
+    addGroupName="--group-name=$availabilityZone"
   fi
 
   while true
   do
-    echo "Adding node to cluster via $$rallyDNS..."
+    echo "Adding node to cluster via $rallyDNS..."
 
     /opt/couchbase/bin/couchbase-cli server-add \
-      --cluster $$rallyDNS \
+      --cluster $rallyDNS \
       --username ${cluster_admin_username} \
       --password ${cluster_admin_password} \
-      --server-add=$$nodeDNS:8091 \
+      --server-add=$nodeDNS:8091 \
       --server-add-username=Administrator \
-      --server-add-password=$$tempPassword \
+      --server-add-password=$tempPassword \
       --services=${services} \
-      $$addGroupName \
+      $addGroupName \
       && break
 
     echo "Sleeping 10 seconds before retry..."
@@ -268,9 +268,9 @@ if [ "${auto_rebalance ? "true" : "false"}" == "true" ]; then
     echo "Running Couchbase rebalance..."
 
     /opt/couchbase/bin/couchbase-cli rebalance \
-      --cluster=$$rallyDNS \
-      --user=$$CB_REST_USERNAME \
-      --pass=$$CB_REST_PASSWORD \
+      --cluster=$rallyDNS \
+      --user=$CB_REST_USERNAME \
+      --pass=$CB_REST_PASSWORD \
       && break
 
     echo "Sleeping 10 seconds before retry..."
