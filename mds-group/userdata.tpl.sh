@@ -26,7 +26,7 @@ tee /etc/init.d/disable-thp << EOL
 # Description:       disables Transparent Huge Pages (THP) on boot
 ### END INIT INFO
 
-case $$$$1 in
+case $1 in
 start)
   if [ -d /sys/kernel/mm/transparent_hugepage ]; then
     echo 'never' > /sys/kernel/mm/transparent_hugepage/enabled
@@ -141,8 +141,8 @@ rallyInstanceID=`echo $rallyAutoscalingGroupInstanceIDs | cut -d " " -f1`
 rallyAutoscalingGroupInstanceIDsArray=(`echo $rallyAutoscalingGroupInstanceIDs`)
 for i in $${rallyAutoscalingGroupInstanceIDsArray[@]}; do
   tags=`aws ec2 describe-tags --region ${region} --filter "Name=tag:Rally,Values=1" "Name=resource-id,Values=$i"`
-  tags=`echo $$tags | jq '.Tags'`
-  if [ "$$tags" != "[]" ]
+  tags=`echo $tags | jq '.Tags'`
+  if [ "$tags" != "[]" ]
   then
     rallyInstanceID=$i
   fi
