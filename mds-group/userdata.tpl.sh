@@ -26,7 +26,7 @@ tee /etc/init.d/disable-thp << EOL
 # Description:       disables Transparent Huge Pages (THP) on boot
 ### END INIT INFO
 
-case $1 in
+case $$1 in
 start)
   if [ -d /sys/kernel/mm/transparent_hugepage ]; then
     echo 'never' > /sys/kernel/mm/transparent_hugepage/enabled
