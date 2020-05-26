@@ -25,7 +25,7 @@ tee /etc/init.d/disable-thp << EOL
 # Short-Description: Disable THP
 # Description:       disables Transparent Huge Pages (THP) on boot
 ### END INIT INFO
-          
+
 case $$$$1 in
 start)
   if [ -d /sys/kernel/mm/transparent_hugepage ]; then
@@ -100,7 +100,7 @@ do
     --node-init-index-path $$DATADIR/index \
     ${analytics_paths} \
     --node-init-hostname $$nodeDNS \
-    --user Administrator \
+    --username Administrator \
     --password $$tempPassword \
     && break
 
@@ -189,7 +189,7 @@ if [ "$$rallyDNS" == "$$nodeDNS" ]; then
 
   if [ "${couchbase_edition}" == "enterprise" ]; then
     availabilityZone=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
-      
+
     echo "Setting initial server group name to $$availabilityZone..."
     curl -s -X PUT -u ${cluster_admin_username}:${cluster_admin_password} \
       http://$$rallyDNS:8091/pools/default/serverGroups/0 \
@@ -209,7 +209,7 @@ else
     while true
     do
       echo "Checking server groups..."
-      
+
       availabilityZone=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
       matchingGroupCount=`curl -s -u ${cluster_admin_username}:${cluster_admin_password} http://$$rallyDNS:8091/pools/default/serverGroups \
         | jq -r '.groups[].name' \
