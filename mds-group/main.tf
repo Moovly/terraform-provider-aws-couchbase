@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 0.10.3" # introduction of Local Values configuration language feature
+  required_version = ">= 0.12" # templatefile function
 }
 
 locals {
@@ -38,7 +38,29 @@ resource "aws_launch_configuration" "node" {
 
   placement_tenancy = var.placement_tenancy
 
-  user_data = data.template_file.user_data.*.rendered[count.index]
+  user_data = templatefile("${path.module}/userdata.tpl.sh", {
+    region            = data.aws_region.current.name
+    apply_updates     = var.apply_updates ? "echo \"Applying updates...\"\nyum update -y": "echo \"Skipping updates\""
+    installer_url     = local.installer_url
+    couchbase_edition = var.couchbase_edition
+
+    topology                   = var.topology
+    cluster_name               = var.cluster_name
+    cluster_name_init          = local.major_version >= 5 ? var.cluster_name : ""
+    cluster_admin_username     = var.cluster_admin_username
+    cluster_admin_password     = var.cluster_admin_password
+    index_storage              = var.cluster_index_storage
+    data_ramsize               = var.cluster_ram_size["data"]
+    index_ramsize              = var.cluster_ram_size["index"]
+    fts_ramsize                = var.cluster_ram_size["fts"]
+    analytics_ramsize          = lookup(var.cluster_ram_size, "analytics", 0)
+    services                   = join(",", var.services)
+    analytics_paths            = contains(var.services, "analytics") ? join(" ", formatlist("--node-init-analytics-path $DATADIR/analytics%s", var.analytics_mpp)) : ""
+    rally_autoscaling_group_id = var.rally_autoscaling_group_id
+
+    additional_initialization_script = var.additional_initialization_script
+    auto_rebalance                   = var.auto_rebalance
+  })
 
   lifecycle {
     create_before_destroy = true
@@ -86,33 +108,3 @@ resource "aws_autoscaling_group" "node" {
 }
 
 data "aws_region" "current" {}
-
-data "template_file" "user_data" {
-  count = var.node_count > 0 ? 1 : 0
-
-  template = file("${path.module}/userdata.tpl.sh")
-
-  vars = {
-    region            = data.aws_region.current.name
-    apply_updates     = var.apply_updates ? "echo \"Applying updates...\"\nyum update -y": "echo \"Skipping updates\""
-    installer_url     = local.installer_url
-    couchbase_edition = var.couchbase_edition
-
-    topology                   = var.topology
-    cluster_name               = var.cluster_name
-    cluster_name_init          = local.major_version >= 5 ? var.cluster_name : ""
-    cluster_admin_username     = var.cluster_admin_username
-    cluster_admin_password     = var.cluster_admin_password
-    index_storage              = var.cluster_index_storage
-    data_ramsize               = var.cluster_ram_size["data"]
-    index_ramsize              = var.cluster_ram_size["index"]
-    fts_ramsize                = var.cluster_ram_size["fts"]
-    analytics_ramsize          = lookup(var.cluster_ram_size, "analytics", 0)
-    services                   = join(",", var.services)
-    analytics_paths            = contains(var.services, "analytics") ? join(" ", formatlist("--node-init-analytics-path $DATADIR/analytics%s", var.analytics_mpp)) : ""
-    rally_autoscaling_group_id = var.rally_autoscaling_group_id
-
-    additional_initialization_script = var.additional_initialization_script
-    auto_rebalance                   = var.auto_rebalance
-  }
-}
